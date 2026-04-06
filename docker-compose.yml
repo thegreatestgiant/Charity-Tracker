@@ -1,0 +1,34 @@
+services:
+  db-dev:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    ports:
+      - "5432:5434" 
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: charity_dev
+
+  db-local:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    ports:
+      - "5432:5433"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: charity_local
+    volumes:
+      - pgdata-local:/var/lib/postgresql/data 
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+# This top-level block tells Docker to actually create the named volume
+volumes:
+  pgdata-local:
