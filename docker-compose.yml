@@ -4,22 +4,22 @@ services:
     restart: always
     shm_size: 128mb
     ports:
-      - "5432:5434" 
+      - "5432:${DEV_PORT}"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: charity_dev
+      POSTGRES_DB: ${DEV_NAME}
 
-  db-local:
+  db-prod:
     image: postgres
     restart: always
     shm_size: 128mb
     ports:
-      - "5432:5433"
+      - "5432:${PROD_PORT}"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: charity_local
+      POSTGRES_DB: ${PROD_NAME}
     volumes:
       - pgdata-local:/var/lib/postgresql/data 
 
