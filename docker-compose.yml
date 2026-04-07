@@ -1,27 +1,28 @@
+---
 services:
   db-dev:
-    image: postgres
+    image: postgres:17
     restart: always
     shm_size: 128mb
     ports:
-      - "5432:${DEV_PORT}"
+      - "${DEV_PORT}:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DEV_NAME}
 
   db-prod:
-    image: postgres
+    image: postgres:17
     restart: always
     shm_size: 128mb
     ports:
-      - "5432:${PROD_PORT}"
+      - "${PROD_PORT}:5432"
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${PROD_NAME}
     volumes:
-      - pgdata-local:/var/lib/postgresql/data 
+      - pgdata-local:/var/lib/postgresql
 
   adminer:
     image: adminer
@@ -29,6 +30,5 @@ services:
     ports:
       - 8080:8080
 
-# This top-level block tells Docker to actually create the named volume
 volumes:
   pgdata-local:
