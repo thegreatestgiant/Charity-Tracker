@@ -14,7 +14,7 @@ logs:
 	docker compose logs -f
 
 run:
-	go run backend/main.go
+	go run -C backend .
 
 migrate-dev: 
 	psql $(DB_DEV_URL) -f backend/schema/$(FILE)
