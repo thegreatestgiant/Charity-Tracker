@@ -18,7 +18,8 @@ func main() {
 	}
 
 	cfg := &handlers.App{
-		DB: db,
+		DB:  db,
+		JWT: os.Getenv("JWT_SECRET"),
 	}
 
 	handlers.StartServer(cfg)

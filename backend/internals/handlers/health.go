@@ -8,7 +8,8 @@ import (
 )
 
 type App struct {
-	DB *sql.DB
+	DB  *sql.DB
+	JWT string
 }
 
 func (cfg *App) PingDB(w http.ResponseWriter, r *http.Request) {
