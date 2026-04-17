@@ -1,25 +1,28 @@
 package middleware
 
-import (
-	"context"
-	"log"
-	"net/http"
-
-	"github.com/thegreatestgiant/Charity-Tracker/internals/auth"
-	"github.com/thegreatestgiant/Charity-Tracker/internals/handlers"
-)
-
-func Authenticate(w http.ResponseWriter, r *http.Request, cfg *handlers.App) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-	}
-	claims, err := auth.Verifyer(cookie.Value, cfg.JWT)
-	if err != nil {
-		log.Fatal("Couldn't get claims", err)
-	}
-
-	ctx := context.WithValue(r.Context(), "users_id", claims.Subject)
-	r.WithContext(ctx)
-}
+// func Authenticate(next http.Handler, cfg *handlers.App) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		cookie, err := r.Cookie("session_id")
+// 		if err != nil {
+// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 			return
+// 		}
+//
+// 		claims, err := auth.Verifyer(cookie.Value, cfg.JWT)
+// 		if err != nil {
+// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 			log.Fatal("Couldn't get claims", err)
+// 		}
+//
+// 		uuid, err := claims.GetSubject()
+// 		if err != nil {
+// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+// 			log.Fatal("Bad uuid")
+// 		}
+//
+// 		ctx := context.WithValue(r.Context(), "users_id", uuid)
+// 		r.WithContext(ctx)
+//
+// 		next.ServeHTTP(w, r)
+// 	})
+// }
