@@ -16,3 +16,6 @@ go.work
 
 # OS clutter
 .DS_Store
+
+# Testing
+cookies.txt

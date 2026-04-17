@@ -27,7 +27,7 @@ func (e EntryType) IsValid() bool {
 }
 
 type Ledger struct {
-	UserID           int       `json:"user_id"`
+	UserID           uuid.UUID `json:"user_id"`
 	TransactionID    int       `json:"transaction_id"`
 	LedgerEntry      EntryType `json:"ledger_entry"` // Maps to your 'entry' enum
 	Amount           float64   `json:"amount"`       // DECIMAL(18,2)
@@ -54,7 +54,7 @@ func (cfg *App) setEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sqlInsert := "INSERT INTO Ledger (user_id, ledger_entry, amount, charity_owed, charity_fulfilled) VALUES ($1, $2, $3, $4, $5)"
+	sqlInsert := "INSERT INTO Ledgers (user_id, ledger_entry, amount, charity_owed, charity_fulfilled) VALUES ($1, $2, $3, $4, $5)"
 	entry := Ledger{}
 
 	json.NewDecoder(r.Body).Decode(&entry)
