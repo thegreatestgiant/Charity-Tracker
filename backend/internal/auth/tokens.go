@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -16,9 +18,13 @@ func Verifyer(tokenString string, secret []byte) (claims jwt.Claims, err error) 
 		}
 		return secret, nil
 	})
-	if err != nil || !token.Valid {
-		fmt.Println("Invalid token:", err)
-		return
+	if err != nil {
+		log.Printf("Cannot Parse Token: %v", err)
+		return nil, err
+	}
+	if !token.Valid {
+		log.Println("Invalid token:")
+		return nil, errors.New("Invalid Token")
 	}
 	return c, nil
 }

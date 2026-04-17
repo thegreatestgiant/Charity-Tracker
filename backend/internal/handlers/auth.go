@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/thegreatestgiant/Charity-Tracker/internals/auth"
+	"github.com/thegreatestgiant/Charity-Tracker/internal/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
