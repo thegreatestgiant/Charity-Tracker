@@ -30,6 +30,29 @@ func (cfg *App) blacklisted(jti uuid.UUID) bool {
 	return true
 }
 
+func (cfg *App) getRefresh(user_id uuid.UUID, expires time.Time) string {
+	query := "SELECT token FROM refresh_tokens WHERE user_id=$1 AND expires_at=$2"
+	token := ""
+	row := cfg.DB.QueryRow(query, user_id, expires)
+	if err := row.Scan(&token); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("No such token: %v", token)
+			return ""
+		}
+		log.Default().Printf("Something went wrong: %v", err)
+		return ""
+	}
+	return token
+}
+
+func (cfg *App) addRefresh(token string, user_id uuid.UUID, expires time.Time) {
+	query := "INSERT INTO refresh_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)"
+	_, err := cfg.DB.Exec(query, token, user_id, expires)
+	if err != nil {
+		log.Println("Couldn't creat refresh token")
+	}
+}
+
 func (cfg *App) getDonationPercent(user_id uuid.UUID) float64 {
 	query := "SELECT donation_percentage FROM users WHERE user_id=$1"
 	percent := 10.0

@@ -25,6 +25,7 @@ func StartServer(cfg *App) {
 	http.HandleFunc("POST /register", cfg.Register)
 	http.HandleFunc("POST /login", cfg.Login)
 	http.HandleFunc("POST /logout", cfg.Logout)
+	http.HandleFunc("POST /refresh", cfg.refresh)
 	http.HandleFunc("POST /entries", middleware.AuthGuard(http.HandlerFunc(cfg.setEntry), cfg.JWT, check))
 	http.HandleFunc("GET /entries", middleware.AuthGuard(http.HandlerFunc(cfg.getEntries), cfg.JWT, check))
 	http.HandleFunc("GET /summary", middleware.AuthGuard(http.HandlerFunc(cfg.summary), cfg.JWT, check))

@@ -131,18 +131,10 @@ func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.MakeJWT(uuid, cfg.JWT, time.Hour*24)
-	if err != nil {
-		log.Println("Couldn't make token")
-		return
-	}
-	cookie := &http.Cookie{
-		Name:     "session_id",
-		Value:    token,
-		HttpOnly: true,
-	}
+	cfg.generateTokensWithCookies(w, uuid)
 
-	http.SetCookie(w, cookie)
-
-	w.Write([]byte("Cookie has been set!"))
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintln(w, "Set jwtCookie and RefreshCookie")
 }
