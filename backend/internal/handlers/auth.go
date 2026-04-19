@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
@@ -56,6 +57,9 @@ func (cfg *App) Register(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Couldn't add to db: %v", err)
 		return
 	}
+
+	fmt.Fprintln(w, "Updated password")
+	log.Println("Updated Password")
 }
 
 func exists(email, username string, cfg *App) bool {
@@ -77,6 +81,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 		Path:     "/",
 	})
+	fmt.Fprintln(w, "Logging out ")
+	log.Println("Logging out")
 }
 
 func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
@@ -86,10 +92,9 @@ func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	body := body{}
 	sqlQuery := "SELECT user_id,password_hash FROM users WHERE username=$1"
 
-	r.Header.Get("Content-Type")
-	body := body{}
 	json.NewDecoder(r.Body).Decode(&body)
 	defer r.Body.Close()
 

@@ -79,7 +79,7 @@ func (cfg *App) setEntry(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry = cfg.getEntry(user_id, entry.TransactionDate)
+	entry = cfg.getEntry(user_id)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

@@ -3,7 +3,6 @@ package handlers
 import (
 	"database/sql"
 	"log"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -26,7 +25,7 @@ func (cfg *App) getDonationPercent(user_id uuid.UUID) float64 {
 	return percent
 }
 
-func (cfg *App) getEntry(user_id uuid.UUID, date time.Time) Ledger {
+func (cfg *App) getEntry(user_id uuid.UUID) Ledger {
 	query := "SELECT * FROM Ledgers WHERE user_id=$1 ORDER BY transaction_date DESC Limit 1"
 	var entry Ledger
 
