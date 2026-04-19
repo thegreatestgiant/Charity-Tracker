@@ -20,19 +20,11 @@ type body struct {
 }
 
 func (cfg *App) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Bad Method", http.StatusMethodNotAllowed)
-		log.Println("Bad Method")
+	if !validateRequest(w, r, "POST", true) {
 		return
 	}
 
 	sqlInsert := "INSERT INTO Users (email,username,password_hash,user_id) VALUES ($1,$2,$3,$4)"
-
-	if r.Header.Get("Content-Type") != "application/json" {
-		http.Error(w, "Unsupported Content-Type", http.StatusNoContent)
-		log.Println("Bad Method")
-		return
-	}
 
 	body := body{}
 	json.NewDecoder(r.Body).Decode(&body)

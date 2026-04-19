@@ -17,6 +17,8 @@ func StartServer(cfg *App) {
 	http.HandleFunc("POST /logout", Logout)
 	http.HandleFunc("POST /entries", middleware.AuthGuard(http.HandlerFunc(cfg.setEntry), cfg.JWT))
 	http.HandleFunc("GET /entries", middleware.AuthGuard(http.HandlerFunc(cfg.getEntries), cfg.JWT))
+	http.HandleFunc("GET /summary", middleware.AuthGuard(http.HandlerFunc(cfg.summary), cfg.JWT))
+	http.HandleFunc("PATCH /users/settings", middleware.AuthGuard(http.HandlerFunc(cfg.setting), cfg.JWT))
 
 	fmt.Println("Starting Server")
 	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)

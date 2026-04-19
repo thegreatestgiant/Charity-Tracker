@@ -13,8 +13,6 @@ type App struct {
 }
 
 func (cfg *App) PingDB(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	err := cfg.DB.Ping()
 	if err != nil {
 		fmt.Fprintf(w, "Failed to reach DB. Err: %v", err)

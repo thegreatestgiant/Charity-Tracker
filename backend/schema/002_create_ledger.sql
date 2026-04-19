@@ -1,4 +1,4 @@
-CREATE type entry AS enum ('paycheck', 'donation', 'running_balance');
+CREATE type entry AS enum ('paycheck', 'donation');
 
 CREATE TABLE Ledgers (
   user_id INT NOT NULL,

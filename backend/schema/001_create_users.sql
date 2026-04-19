@@ -1,5 +1,5 @@
 CREATE TABLE Users (
-  user_id SERIAL PRIMARY KEY,
+  user_id UUID PRIMARY KEY,
   email text,
   username text NOT NULL,
   password_hash VARCHAR(72) NOT NULL,
