@@ -72,7 +72,25 @@ func exists(email, username string, cfg *App) bool {
 	return true
 }
 
-func Logout(w http.ResponseWriter, r *http.Request) {
+func (cfg *App) Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	claims, err := auth.Verifyer(cookie.Value, cfg.JWT)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("Couldn't get claims", err)
+		return
+	}
+	jti, err := uuid.Parse(claims.ID)
+	if err != nil {
+		log.Printf("Couldn't get jti uuid: %v", err)
+		return
+	}
+	cfg.denyList(jti)
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
 		Value:    "",
@@ -86,9 +104,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Bad Method", http.StatusMethodNotAllowed)
-		log.Println("Bad Method")
+	if !validateRequest(w, r, "POST", true) {
 		return
 	}
 

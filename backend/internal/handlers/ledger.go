@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"net/http"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -27,13 +26,10 @@ func (e EntryType) IsValid() bool {
 }
 
 type Ledger struct {
-	UserID           uuid.UUID `json:"user_id"`
-	TransactionID    int       `json:"transaction_id"`
 	LedgerEntry      EntryType `json:"ledger_entry"` // Maps to your 'entry' enum
 	Amount           float64   `json:"amount"`       // DECIMAL(18,2)
 	CharityOwed      float64   `json:"charity_owed"` // Use pointers if these can be NULL
 	CharityFulfilled float64   `json:"charity_fulfilled"`
-	TransactionDate  time.Time `json:"transaction_date"`
 }
 
 func (cfg *App) setEntry(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +107,7 @@ func (cfg *App) getEntries(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var entry Ledger
-		if err = rows.Scan(&entry.UserID, &entry.TransactionID, &entry.LedgerEntry, &entry.Amount, &entry.CharityOwed, &entry.CharityFulfilled, &entry.TransactionDate); err != nil {
+		if err = rows.Scan(&entry.LedgerEntry, &entry.Amount, &entry.CharityOwed, &entry.CharityFulfilled); err != nil {
 			log.Printf("Couldn't scan row: %v", err)
 			end(w, r, entries)
 			return

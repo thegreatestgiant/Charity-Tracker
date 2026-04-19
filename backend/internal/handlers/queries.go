@@ -3,9 +3,32 @@ package handlers
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 )
+
+func (cfg *App) denyList(jti uuid.UUID) {
+	query := "INSERT INTO denylist VALUES ($1, $2)"
+	_, err := cfg.DB.Exec(query, jti, time.Now().Local().Add(time.Hour*24))
+	if err != nil {
+		log.Printf("Bad jti or time: %v", jti)
+	}
+}
+
+func (cfg *App) blacklisted(jti uuid.UUID) bool {
+	query := "SELECT jti FROM denylist WHERE jti=$1"
+	row := cfg.DB.QueryRow(query, jti)
+	if err := row.Scan(&uuid.UUID{}); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Not in denylist: %v", jti)
+			return false
+		}
+		log.Default().Printf("Something went wrong: %v", err)
+		return false
+	}
+	return true
+}
 
 func (cfg *App) getDonationPercent(user_id uuid.UUID) float64 {
 	query := "SELECT donation_percentage FROM users WHERE user_id=$1"
@@ -26,16 +49,16 @@ func (cfg *App) getDonationPercent(user_id uuid.UUID) float64 {
 }
 
 func (cfg *App) getEntry(user_id uuid.UUID) Ledger {
-	query := "SELECT * FROM Ledgers WHERE user_id=$1 ORDER BY transaction_date DESC Limit 1"
+	query := "SELECT ledger_entry, amount, charity_owed, charity_fulfilled FROM Ledgers WHERE user_id=$1 ORDER BY transaction_date DESC Limit 1"
 	var entry Ledger
 
 	row := cfg.DB.QueryRow(query, user_id)
-	if err := row.Scan(&entry.UserID, &entry.TransactionID, &entry.LedgerEntry, &entry.Amount, &entry.CharityOwed, &entry.CharityFulfilled, &entry.TransactionDate); err != nil {
+	if err := row.Scan(&entry.LedgerEntry, &entry.Amount, &entry.CharityOwed, &entry.CharityFulfilled); err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("Bad uuid: %v. Or the date was wrong: %v", user_id)
 			return entry
 		}
-		log.Default().Printf("No such Entry", err)
+		log.Default().Printf("No such Entry: %v", err)
 		return entry
 	}
 

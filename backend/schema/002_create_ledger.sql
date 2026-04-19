@@ -9,4 +9,4 @@ CREATE TABLE Ledgers (
   charity_fulfilled DECIMAL(18, 2),
   transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_user_id FOREIGN KEY (user_id) REFERENCES Users (user_id)
-)
+);

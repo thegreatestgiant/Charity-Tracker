@@ -9,7 +9,7 @@ import (
 	"github.com/thegreatestgiant/Charity-Tracker/internal/auth"
 )
 
-func AuthGuard(next http.Handler, jwt []byte) func(http.ResponseWriter, *http.Request) {
+func AuthGuard(next http.Handler, jwt []byte, check func(jti string) bool) func(http.ResponseWriter, *http.Request) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
@@ -20,16 +20,19 @@ func AuthGuard(next http.Handler, jwt []byte) func(http.ResponseWriter, *http.Re
 		claims, err := auth.Verifyer(cookie.Value, jwt)
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			log.Fatal("Couldn't get claims", err)
-		}
-
-		uuidStr, err := claims.GetSubject()
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			log.Println("Bad uuid")
+			log.Printf("Couldn't get claims", err)
 			return
 		}
 
+		jti := claims.ID
+		log.Printf("The jti: %v ", jti)
+		if check(jti) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			log.Println("You are blacklisted")
+			return
+		}
+
+		uuidStr := claims.Subject
 		uuid, err := uuid.Parse(uuidStr)
 		if err != nil {
 			log.Printf("Couldn't get uuid: %v ", err)
@@ -37,6 +40,7 @@ func AuthGuard(next http.Handler, jwt []byte) func(http.ResponseWriter, *http.Re
 		}
 
 		r = r.WithContext(context.WithValue(r.Context(), "user_id", uuid))
+		r = r.WithContext(context.WithValue(r.Context(), "jti", jti))
 
 		next.ServeHTTP(w, r)
 	})

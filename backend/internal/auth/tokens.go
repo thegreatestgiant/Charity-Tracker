@@ -10,8 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func Verifyer(tokenString string, secret []byte) (claims jwt.Claims, err error) {
-	c := &jwt.MapClaims{}
+func Verifyer(tokenString string, secret []byte) (claims *jwt.RegisteredClaims, err error) {
+	c := &jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, c, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -20,11 +20,11 @@ func Verifyer(tokenString string, secret []byte) (claims jwt.Claims, err error) 
 	})
 	if err != nil {
 		log.Printf("Cannot Parse Token: %v", err)
-		return nil, err
+		return &jwt.RegisteredClaims{}, err
 	}
 	if !token.Valid {
 		log.Println("Invalid token:")
-		return nil, errors.New("Invalid Token")
+		return &jwt.RegisteredClaims{}, errors.New("Invalid Token")
 	}
 	return c, nil
 }
@@ -35,5 +35,6 @@ func MakeJWT(userID uuid.UUID, tokenSecret []byte, expiresIn time.Duration) (str
 		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
 		Subject:   userID.String(),
+		ID:        uuid.NewString(),
 	}).SignedString(tokenSecret)
 }
