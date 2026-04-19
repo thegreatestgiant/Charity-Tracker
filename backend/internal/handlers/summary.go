@@ -29,7 +29,7 @@ func (cfg *App) summary(w http.ResponseWriter, r *http.Request) {
 	}
 	owed := cfg.getAmountOwed(user_id)
 	fulfilled := cfg.getAmountFulfilled(user_id)
-	remaining := owed - ((fulfilled / 100) * owed)
+	remaining := owed - ((math.Min(100, fulfilled) / 100) * owed)
 	remaining = math.Round(remaining*100) / 100
 	donated := cfg.getAmountDonated(user_id)
 	earned := cfg.getAmountEarned(user_id)

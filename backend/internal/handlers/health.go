@@ -1,16 +1,10 @@
 package handlers
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 )
-
-type App struct {
-	DB  *sql.DB
-	JWT []byte
-}
 
 func (cfg *App) PingDB(w http.ResponseWriter, r *http.Request) {
 	err := cfg.DB.Ping()
