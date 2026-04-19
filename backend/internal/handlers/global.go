@@ -101,7 +101,7 @@ func (cfg *App) getAmountEarned(user_id uuid.UUID) float64 {
 		return 10
 	}
 
-	log.Printf("Total Amount Earned", earned)
+	log.Printf("Total Amount Earned: %.2f", earned)
 	return earned
 }
 
@@ -119,7 +119,7 @@ func (cfg *App) getAmountDonated(user_id uuid.UUID) float64 {
 		return 10
 	}
 
-	log.Printf("Total Amount Donated", donated)
+	log.Printf("Total Amount Donated: %.2f", donated)
 	return donated
 }
 
