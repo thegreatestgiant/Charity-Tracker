@@ -30,19 +30,29 @@ func (cfg *App) blacklisted(jti uuid.UUID) bool {
 	return true
 }
 
-func (cfg *App) getRefresh(user_id uuid.UUID, expires time.Time) string {
-	query := "SELECT token FROM refresh_tokens WHERE user_id=$1 AND expires_at=$2"
-	token := ""
-	row := cfg.DB.QueryRow(query, user_id, expires)
+func (cfg *App) getRefresh(user_id uuid.UUID) string {
+	query := "SELECT token FROM refresh_tokens WHERE user_id=$1 AND expires_at>$2 AND revoked_at IS NULL"
+	var token string
+	row := cfg.DB.QueryRow(query, user_id, time.Now())
 	if err := row.Scan(&token); err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("No such token: %v", token)
+			log.Printf("No such token for user_id: %v", user_id)
 			return ""
 		}
 		log.Default().Printf("Something went wrong: %v", err)
 		return ""
 	}
+	log.Printf("Here is the token: %v ", token)
 	return token
+}
+
+func (cfg *App) revokeRefresh(token string) {
+	query := "UPDATE refresh_tokens SET updated_at=$1, revoked_at=$1 WHERE token=$2"
+
+	_, err := cfg.DB.Exec(query, time.Now(), token)
+	if err != nil {
+		log.Printf("Couldn't revoke refresh token: %v", err)
+	}
 }
 
 func (cfg *App) addRefresh(token string, user_id uuid.UUID, expires time.Time) {

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -9,16 +8,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type refresh struct {
-	Token string `json:"refresh_token"`
-}
-
 func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
-	if !validateRequest(w, r, "POST", true) {
+	if !validateRequest(w, r, "POST", false) {
 		return
 	}
 
-	var refresh refresh
 	user_id := getUUID(w, r)
 	jti := getUUID(w, r)
 	if jti == uuid.Nil || user_id == uuid.Nil {
@@ -31,10 +25,7 @@ func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewDecoder(r.Body).Decode(&refresh)
-	defer r.Body.Close()
-
-	hashed_refresh := cfg.getRefresh(user_id, cookie.Expires)
+	hashed_refresh := cfg.getRefresh(user_id)
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashed_refresh), []byte(cookie.Value))
 	if err != nil {
@@ -43,5 +34,5 @@ func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg.denyList(jti)
-	cfg.generateTokensWithCookies(w, user_id)
+	cfg.generateJWTWithCookies(w, user_id)
 }

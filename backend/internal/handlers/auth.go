@@ -90,6 +90,7 @@ func (cfg *App) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cfg.denyList(jti)
+	cfg.revoke(w, r)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
@@ -131,7 +132,8 @@ func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg.generateTokensWithCookies(w, uuid)
+	cfg.generateJWTWithCookies(w, uuid)
+	cfg.generateRefreshWithCookies(w, uuid)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
