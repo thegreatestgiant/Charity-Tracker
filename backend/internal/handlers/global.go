@@ -50,7 +50,12 @@ func getJti(w http.ResponseWriter, r *http.Request) uuid.UUID {
 	return jti
 }
 
-func (cfg *App) generateRefreshWithCookies(w http.ResponseWriter, uuid uuid.UUID) {
+func (cfg *App) generateTokensWithCookies(w http.ResponseWriter, uuid uuid.UUID) {
+	token, err := auth.MakeJWT(uuid, cfg.JWT, time.Hour*24)
+	if err != nil {
+		log.Println("Couldn't make token")
+		return
+	}
 	refresh_token := auth.MakeRefreshToken()
 	log.Printf("Refresh token: %v ", refresh_token)
 	byte_hashed_refresh, err := bcrypt.GenerateFromPassword([]byte(refresh_token), bcrypt.DefaultCost)
@@ -63,28 +68,19 @@ func (cfg *App) generateRefreshWithCookies(w http.ResponseWriter, uuid uuid.UUID
 	expires_at := time.Now().AddDate(0, 0, 60)
 	cfg.addRefresh(hashed_refresh, uuid, expires_at)
 	log.Printf("Added this Hashed refresh: %v", hashed_refresh)
-	log.Printf("Expires at: %v", expires_at)
-	refreshCookie := &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refresh_token,
-		HttpOnly: true,
-		Expires:  expires_at,
-	}
 
-	http.SetCookie(w, refreshCookie)
-}
-
-func (cfg *App) generateJWTWithCookies(w http.ResponseWriter, uuid uuid.UUID) {
-	token, err := auth.MakeJWT(uuid, cfg.JWT, time.Hour*24)
-	if err != nil {
-		log.Println("Couldn't make token")
-		return
-	}
 	jwtCookie := &http.Cookie{
 		Name:     "session_id",
 		Value:    token,
 		HttpOnly: true,
 	}
+	refreshCookie := &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refresh_token,
+		HttpOnly: true,
+		Path:     "/refresh",
+	}
 
 	http.SetCookie(w, jwtCookie)
+	http.SetCookie(w, refreshCookie)
 }

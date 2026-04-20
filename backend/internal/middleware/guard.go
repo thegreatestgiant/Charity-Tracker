@@ -9,7 +9,7 @@ import (
 	"github.com/thegreatestgiant/Charity-Tracker/internal/auth"
 )
 
-func AuthGuard(next http.Handler, jwt []byte, check func(jti string) bool) func(http.ResponseWriter, *http.Request) {
+func AuthGuard(next http.Handler, jwt []byte, check func(jti uuid.UUID) bool) func(http.ResponseWriter, *http.Request) {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
@@ -24,7 +24,12 @@ func AuthGuard(next http.Handler, jwt []byte, check func(jti string) bool) func(
 			return
 		}
 
-		jti := claims.ID
+		jtiStr := claims.ID
+		jti, err := uuid.Parse(jtiStr)
+		if err != nil {
+			log.Printf("Couldn't get jti uuid: %v", err)
+			return
+		}
 		log.Printf("The jti: %v ", jti)
 		if check(jti) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

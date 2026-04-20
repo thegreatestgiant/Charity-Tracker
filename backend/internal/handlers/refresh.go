@@ -14,7 +14,7 @@ func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user_id := getUUID(w, r)
-	jti := getUUID(w, r)
+	jti := getJti(w, r)
 	if jti == uuid.Nil || user_id == uuid.Nil {
 		return
 	}
@@ -26,6 +26,17 @@ func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashed_refresh := cfg.getRefresh(user_id)
+	log.Printf("Hashed: %v ", hashed_refresh)
+	log.Printf("cookie normal: %v ", cookie.Value)
+
+	byte_hashed_refresh, err := bcrypt.GenerateFromPassword([]byte(cookie.Value), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("Couldn't hash or smtg: %v", err)
+		return
+	}
+
+	log.Printf("cookie encrypted: %v ", string(byte_hashed_refresh))
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashed_refresh), []byte(cookie.Value))
 	if err != nil {
@@ -34,5 +45,6 @@ func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg.denyList(jti)
-	cfg.generateJWTWithCookies(w, user_id)
+	cfg.revoke(w, r)
+	cfg.generateTokensWithCookies(w, user_id)
 }

@@ -1,6 +1,11 @@
 package handlers
 
-import "net/http"
+import (
+	"log"
+	"net/http"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 func (cfg *App) revoke(w http.ResponseWriter, r *http.Request) {
 	if !validateRequest(w, r, "POST", false) {
@@ -12,6 +17,13 @@ func (cfg *App) revoke(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+	byte_hashed_refresh, err := bcrypt.GenerateFromPassword([]byte(cookie.Value), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		log.Printf("Couldn't hash or smtg: %v", err)
+		return
+	}
 
-	cfg.revokeRefresh(cookie.Value)
+	cfg.revokeRefresh(string(byte_hashed_refresh))
+	log.Println("Revoked refresh token")
 }

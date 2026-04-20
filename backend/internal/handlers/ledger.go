@@ -89,7 +89,7 @@ func (cfg *App) getEntries(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	entries := []Ledger{}
-	query := "SELECT * FROM Ledgers WHERE user_id=$1"
+	query := "SELECT ledger_entry, amount, charity_owed, charity_fulfilled FROM Ledgers WHERE user_id=$1"
 
 	user_id := getUUID(w, r)
 	if user_id == uuid.Nil {

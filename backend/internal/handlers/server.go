@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -11,12 +10,12 @@ import (
 )
 
 func StartServer(cfg *App) {
-	check := func(jtiStr string) bool {
-		jti, err := uuid.Parse(jtiStr)
-		if err != nil {
-			log.Printf("Couldn't get jti uuid: %v", err)
-			return false
-		}
+	check := func(jti uuid.UUID) bool {
+		// jti, err := uuid.Parse(jtiStr)
+		// if err != nil {
+		// 	log.Printf("Couldn't get jti uuid: %v", err)
+		// 	return false
+		// }
 		return cfg.blacklisted(jti)
 	}
 	port := os.Getenv("APP_PORT")

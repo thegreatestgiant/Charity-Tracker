@@ -132,8 +132,7 @@ func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg.generateJWTWithCookies(w, uuid)
-	cfg.generateRefreshWithCookies(w, uuid)
+	cfg.generateTokensWithCookies(w, uuid)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
