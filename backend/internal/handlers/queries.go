@@ -10,7 +10,7 @@ import (
 
 func (cfg *App) denyList(jti uuid.UUID) {
 	query := "INSERT INTO denylist VALUES ($1, $2)"
-	_, err := cfg.DB.Exec(query, jti, time.Now().Local().Add(time.Hour*24))
+	_, err := cfg.DB.Exec(query, jti, time.Now().Local().Add(cfg.Lifetime))
 	if err != nil {
 		log.Printf("Bad jti or time: %v", jti)
 	}
@@ -158,4 +158,57 @@ func (cfg *App) getAmountFulfilled(user_id uuid.UUID) float64 {
 
 	log.Printf("Total Percent Fulfilled: %.2f%%", fulfilled)
 	return fulfilled
+}
+
+func (cfg *App) getUser(username string) (uuid.UUID, string) {
+	sqlQuery := "SELECT user_id,password_hash FROM users WHERE username=$1"
+
+	var user_id uuid.UUID
+	var pass string
+	row := cfg.DB.QueryRow(sqlQuery, username)
+	if err := row.Scan(&user_id, &pass); err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Incorrect username %s or password", username)
+			return uuid.Nil, ""
+		}
+		log.Printf("Incorrect username %s or password", user_id)
+		return uuid.Nil, ""
+	}
+	return user_id, pass
+}
+
+func (cfg *App) setUser(email, username, passwordHash string) error {
+	sqlInsert := "INSERT INTO Users (email,username,password_hash,user_id) VALUES ($1,$2,$3,$4)"
+
+	_, err := cfg.DB.Query(sqlInsert, email, username, passwordHash, uuid.New())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (cfg *App) userExists(email, username string) bool {
+	query := "SELECT * FROM users WHERE email=$1 OR username=$2"
+	// Will return nil if empty, and it doesn't exist
+	err := cfg.DB.QueryRow(query, email, username).Scan()
+	if err == sql.ErrNoRows {
+		return false
+	}
+	return true
+}
+
+func (cfg *App) deleteExpiredJTI() {
+	query := "DELETE FROM denylist WHERE expires_at < Now()"
+	_, err := cfg.DB.Exec(query)
+	if err != nil {
+		log.Printf("Couldn't delete: %v", err)
+	}
+}
+
+func (cfg *App) deleteExpiredRefresh() {
+	query := "DELETE FROM refresh_tokens WHERE expires_at < Now()"
+	_, err := cfg.DB.Exec(query)
+	if err != nil {
+		log.Printf("Couldn't delete: %v", err)
+	}
 }

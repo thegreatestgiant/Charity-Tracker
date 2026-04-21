@@ -25,26 +25,15 @@ func (cfg *App) refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashed_refresh := cfg.getRefresh(user_id)
-	log.Printf("Hashed: %v ", hashed_refresh)
-	log.Printf("cookie normal: %v ", cookie.Value)
+	hashedRefresh := cfg.getRefresh(user_id)
 
-	byte_hashed_refresh, err := bcrypt.GenerateFromPassword([]byte(cookie.Value), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		log.Printf("Couldn't hash or smtg: %v", err)
-		return
-	}
-
-	log.Printf("cookie encrypted: %v ", string(byte_hashed_refresh))
-
-	err = bcrypt.CompareHashAndPassword([]byte(hashed_refresh), []byte(cookie.Value))
+	err = bcrypt.CompareHashAndPassword([]byte(hashedRefresh), []byte(cookie.Value))
 	if err != nil {
 		log.Printf("Bad password: %v", err)
 		return
 	}
 
 	cfg.denyList(jti)
-	cfg.revoke(w, r)
+	cfg.revokeRefresh(hashedRefresh)
 	cfg.generateTokensWithCookies(w, user_id)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/thegreatestgiant/Charity-Tracker/internal/db"
@@ -18,9 +19,17 @@ func main() {
 	}
 
 	cfg := &handlers.App{
-		DB:  db,
-		JWT: []byte(os.Getenv("JWT_SECRET")),
+		DB:       db,
+		JWT:      []byte(os.Getenv("JWT_SECRET")),
+		Lifetime: time.Hour * 24,
 	}
+
+	ticker := time.NewTicker(cfg.Lifetime)
+	go func() {
+		for range ticker.C {
+			cfg.Cleanup()
+		}
+	}()
 
 	handlers.StartServer(cfg)
 }

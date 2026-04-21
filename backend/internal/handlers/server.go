@@ -11,11 +11,6 @@ import (
 
 func StartServer(cfg *App) {
 	check := func(jti uuid.UUID) bool {
-		// jti, err := uuid.Parse(jtiStr)
-		// if err != nil {
-		// 	log.Printf("Couldn't get jti uuid: %v", err)
-		// 	return false
-		// }
 		return cfg.blacklisted(jti)
 	}
 	port := os.Getenv("APP_PORT")
@@ -25,6 +20,7 @@ func StartServer(cfg *App) {
 	http.HandleFunc("POST /login", cfg.Login)
 	http.HandleFunc("POST /logout", cfg.Logout)
 	http.HandleFunc("POST /refresh", middleware.AuthGuard(http.HandlerFunc(cfg.refresh), cfg.JWT, check))
+	http.HandleFunc("POST /revoke", middleware.AuthGuard(http.HandlerFunc(cfg.revoke), cfg.JWT, check))
 	http.HandleFunc("POST /entries", middleware.AuthGuard(http.HandlerFunc(cfg.setEntry), cfg.JWT, check))
 	http.HandleFunc("GET /entries", middleware.AuthGuard(http.HandlerFunc(cfg.getEntries), cfg.JWT, check))
 	http.HandleFunc("GET /summary", middleware.AuthGuard(http.HandlerFunc(cfg.summary), cfg.JWT, check))

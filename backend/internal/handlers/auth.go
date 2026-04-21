@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -25,15 +24,13 @@ func (cfg *App) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sqlInsert := "INSERT INTO Users (email,username,password_hash,user_id) VALUES ($1,$2,$3,$4)"
-
-	body := body{}
+	var body body
 	json.NewDecoder(r.Body).Decode(&body)
 	defer r.Body.Close()
 
 	log.Printf("Here's the body: %v", body)
 
-	if exists(body.Email, body.Username, cfg) {
+	if cfg.userExists(body.Email, body.Username) {
 		http.Error(w, "Already exists", http.StatusConflict)
 		log.Println("Username or email already exist")
 		return
@@ -51,7 +48,8 @@ func (cfg *App) Register(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Couldn't hash or smtg: %v", err)
 		return
 	}
-	_, err = cfg.DB.Query(sqlInsert, body.Email, body.Username, hashedPassword, uuid.New())
+
+	err = cfg.setUser(body.Email, body.Username, string(hashedPassword))
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		log.Printf("Couldn't add to db: %v", err)
@@ -62,28 +60,20 @@ func (cfg *App) Register(w http.ResponseWriter, r *http.Request) {
 	log.Println("Updated Password")
 }
 
-func exists(email, username string, cfg *App) bool {
-	query := "SELECT * FROM users WHERE email=$1 OR username=$2"
-	// Will return nil if empty, and it doesn't exist
-	err := cfg.DB.QueryRow(query, email, username).Scan()
-	if err == sql.ErrNoRows {
-		return false
-	}
-	return true
-}
-
 func (cfg *App) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
+
 	claims, err := auth.Verifyer(cookie.Value, cfg.JWT)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		log.Printf("Couldn't get claims", err)
 		return
 	}
+
 	jti, err := uuid.Parse(claims.ID)
 	if err != nil {
 		log.Printf("Couldn't get jti uuid: %v", err)
@@ -109,30 +99,18 @@ func (cfg *App) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body := body{}
-	sqlQuery := "SELECT user_id,password_hash FROM users WHERE username=$1"
-
+	var body body
 	json.NewDecoder(r.Body).Decode(&body)
 	defer r.Body.Close()
 
-	var uuid uuid.UUID
-	var pass string
-	row := cfg.DB.QueryRow(sqlQuery, body.Username)
-	if err := row.Scan(&uuid, &pass); err != nil {
-		if err == sql.ErrNoRows {
-			log.Printf("Incorrect username %s or password", body.Username)
-			return
-		}
-		log.Printf("Incorrect username %s or password", body.Username)
-		return
-	}
-	err := bcrypt.CompareHashAndPassword([]byte(pass), []byte(body.Password))
+	user_id, hashedPass := cfg.getUser(body.Username)
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPass), []byte(body.Password))
 	if err != nil {
 		log.Printf("Bad password: %v", err)
 		return
 	}
 
-	cfg.generateTokensWithCookies(w, uuid)
+	cfg.generateTokensWithCookies(w, user_id)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")

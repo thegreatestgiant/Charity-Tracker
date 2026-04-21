@@ -12,8 +12,9 @@ import (
 )
 
 type App struct {
-	DB  *sql.DB
-	JWT []byte
+	DB       *sql.DB
+	JWT      []byte
+	Lifetime time.Duration
 }
 
 func validateRequest(w http.ResponseWriter, r *http.Request, method string, requiresBody bool) bool {
@@ -51,23 +52,25 @@ func getJti(w http.ResponseWriter, r *http.Request) uuid.UUID {
 }
 
 func (cfg *App) generateTokensWithCookies(w http.ResponseWriter, uuid uuid.UUID) {
-	token, err := auth.MakeJWT(uuid, cfg.JWT, time.Hour*24)
+	token, err := auth.MakeJWT(uuid, cfg.JWT, cfg.Lifetime)
 	if err != nil {
 		log.Println("Couldn't make token")
 		return
 	}
-	refresh_token := auth.MakeRefreshToken()
-	log.Printf("Refresh token: %v ", refresh_token)
-	byte_hashed_refresh, err := bcrypt.GenerateFromPassword([]byte(refresh_token), bcrypt.DefaultCost)
+
+	refreshToken := auth.MakeRefreshToken()
+	log.Printf("Refresh token: %v ", refreshToken)
+
+	hashedRefreshByte, err := bcrypt.GenerateFromPassword([]byte(refreshToken), bcrypt.DefaultCost)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		log.Printf("Couldn't hash or smtg: %v", err)
 		return
 	}
-	hashed_refresh := string(byte_hashed_refresh)
+	hashedRefresh := string(hashedRefreshByte)
 	expires_at := time.Now().AddDate(0, 0, 60)
-	cfg.addRefresh(hashed_refresh, uuid, expires_at)
-	log.Printf("Added this Hashed refresh: %v", hashed_refresh)
+	cfg.addRefresh(hashedRefresh, uuid, expires_at)
+	log.Printf("Added this Hashed refresh: %v", hashedRefresh)
 
 	jwtCookie := &http.Cookie{
 		Name:     "session_id",
@@ -76,7 +79,7 @@ func (cfg *App) generateTokensWithCookies(w http.ResponseWriter, uuid uuid.UUID)
 	}
 	refreshCookie := &http.Cookie{
 		Name:     "refresh_token",
-		Value:    refresh_token,
+		Value:    refreshToken,
 		HttpOnly: true,
 		Path:     "/refresh",
 	}

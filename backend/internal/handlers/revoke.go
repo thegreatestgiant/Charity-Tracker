@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/google/uuid"
 )
 
 func (cfg *App) revoke(w http.ResponseWriter, r *http.Request) {
@@ -12,18 +12,13 @@ func (cfg *App) revoke(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := r.Cookie("refresh_token")
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	byte_hashed_refresh, err := bcrypt.GenerateFromPassword([]byte(cookie.Value), bcrypt.DefaultCost)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		log.Printf("Couldn't hash or smtg: %v", err)
+	user_id := getUUID(w, r)
+	if user_id == uuid.Nil {
 		return
 	}
 
-	cfg.revokeRefresh(string(byte_hashed_refresh))
+	refresh := cfg.getRefresh(user_id)
+
+	cfg.revokeRefresh(refresh)
 	log.Println("Revoked refresh token")
 }
