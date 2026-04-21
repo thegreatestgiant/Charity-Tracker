@@ -6,6 +6,7 @@
 # Frontend build output - you got this
 frontend/dist/
 frontend/node_modules/
+dist/
 
 # Go - the compiled binary (Go compiles to a single executable)
 backend/bin/

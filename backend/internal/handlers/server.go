@@ -15,19 +15,24 @@ func StartServer(cfg *App) {
 	}
 	port := os.Getenv("APP_PORT")
 
-	http.HandleFunc("GET /health", cfg.PingDB)
-	http.HandleFunc("POST /register", cfg.Register)
-	http.HandleFunc("POST /login", cfg.Login)
-	http.HandleFunc("POST /logout", cfg.Logout)
-	http.HandleFunc("POST /refresh", middleware.AuthGuard(http.HandlerFunc(cfg.refresh), cfg.JWT, check))
-	http.HandleFunc("POST /revoke", middleware.AuthGuard(http.HandlerFunc(cfg.revoke), cfg.JWT, check))
-	http.HandleFunc("POST /entries", middleware.AuthGuard(http.HandlerFunc(cfg.setEntry), cfg.JWT, check))
-	http.HandleFunc("GET /entries", middleware.AuthGuard(http.HandlerFunc(cfg.getEntries), cfg.JWT, check))
-	http.HandleFunc("GET /summary", middleware.AuthGuard(http.HandlerFunc(cfg.summary), cfg.JWT, check))
-	http.HandleFunc("PATCH /users/settings", middleware.AuthGuard(http.HandlerFunc(cfg.updatePercent), cfg.JWT, check))
-	http.HandleFunc("POST /users/change-password", middleware.AuthGuard(http.HandlerFunc(cfg.changePassword), cfg.JWT, check))
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /health", cfg.PingDB)
+	mux.HandleFunc("POST /register", cfg.Register)
+	mux.HandleFunc("POST /login", cfg.Login)
+	mux.HandleFunc("POST /logout", cfg.Logout)
+	mux.HandleFunc("POST /refresh", middleware.AuthGuard(http.HandlerFunc(cfg.refresh), cfg.JWT, check))
+	mux.HandleFunc("POST /revoke", middleware.AuthGuard(http.HandlerFunc(cfg.revoke), cfg.JWT, check))
+	mux.HandleFunc("POST /entries", middleware.AuthGuard(http.HandlerFunc(cfg.setEntry), cfg.JWT, check))
+	mux.HandleFunc("GET /entries", middleware.AuthGuard(http.HandlerFunc(cfg.getEntries), cfg.JWT, check))
+	mux.HandleFunc("GET /summary", middleware.AuthGuard(http.HandlerFunc(cfg.summary), cfg.JWT, check))
+	mux.HandleFunc("PATCH /users/settings", middleware.AuthGuard(http.HandlerFunc(cfg.updatePercent), cfg.JWT, check))
+	mux.HandleFunc("POST /users/change-password", middleware.AuthGuard(http.HandlerFunc(cfg.changePassword), cfg.JWT, check))
+
+	fs := http.FileServer(http.Dir("../dist"))
+	mux.Handle("/", middleware.SpaFallback(fs, "index.html"))
 
 	fmt.Println("Starting Server")
-	http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
+	http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
 	fmt.Println("Stopping Server")
 }
