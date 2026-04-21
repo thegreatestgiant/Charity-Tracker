@@ -74,16 +74,33 @@ func (cfg *App) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user_id, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		log.Printf("Couldn't get user uuid: %v", err)
+		return
+	}
+	refresh := cfg.getRefresh(user_id)
+
 	jti, err := uuid.Parse(claims.ID)
 	if err != nil {
 		log.Printf("Couldn't get jti uuid: %v", err)
 		return
 	}
+
 	cfg.denyList(jti)
-	cfg.revoke(w, r)
+	cfg.revokeRefresh(refresh)
+	log.Println("Revoked Refresh")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_id",
+		Value:    "",
+		HttpOnly: true,
+		Expires:  time.Unix(0, 0),
+		MaxAge:   -1,
+		Path:     "/",
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
 		Value:    "",
 		HttpOnly: true,
 		Expires:  time.Unix(0, 0),

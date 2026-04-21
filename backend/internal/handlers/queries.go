@@ -31,7 +31,7 @@ func (cfg *App) blacklisted(jti uuid.UUID) bool {
 }
 
 func (cfg *App) getRefresh(user_id uuid.UUID) string {
-	query := "SELECT token FROM refresh_tokens WHERE user_id=$1 AND expires_at>$2 AND revoked_at IS NULL"
+	query := "SELECT token FROM refresh_tokens WHERE user_id=$1 AND expires_at>$2 AND revoked_at IS NULL ORDER BY created_at DESC LIMIT 1"
 	var token string
 	row := cfg.DB.QueryRow(query, user_id, time.Now())
 	if err := row.Scan(&token); err != nil {

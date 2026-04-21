@@ -14,6 +14,7 @@ func AuthGuard(next http.Handler, jwt []byte, check func(jti uuid.UUID) bool) fu
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			log.Println("Bad session ID")
 			return
 		}
 
